@@ -65,5 +65,28 @@ namespace PortSafe.API.Services
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
+        public async Task<string?> RegisterAsync(UserCreateDto dto)
+        {
+            var existingUser = await _userRepository.GetByEmailAsync(dto.Email);
+            if (existingUser != null) return null;
+
+            var user = new User
+            {
+                Id = Guid.NewGuid(),
+                Name = dto.Name,
+                Email = dto.Email,
+                PasswordHash = HashPassword(dto.Password),
+                Role = Enum.Parse<Role>(dto.Role, true),
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _userRepository.CreateAsync(user);
+
+            // já retorna token após registro (UX melhor)
+            return GenerateJwtToken(user);
+        }
     }
+
+
 }

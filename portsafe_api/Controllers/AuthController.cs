@@ -1,9 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
-using portsafe_api.Services;
-using portsafe_api.DTOs;
+using PortSafe.API.DTOs;
+using PortSafe.API.Interfaces;
 
-namespace portsafe_api.Controllers
+namespace PortSafe.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -22,11 +21,26 @@ namespace portsafe_api.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(new { success = false, message = "Dados inválidos" });
 
-            var result = await _authService.LoginAsync(loginDto);
-            if (!result.Success)
-                return Unauthorized(new { success = false, message = result.Message });
+            var token = await _authService.LoginAsync(loginDto);
 
-            return Ok(new { success = true, token = result.Token, user = result.User });
+            if (token == null)
+                return Unauthorized(new { success = false, message = "Credenciais inválidas" });
+
+            return Ok(new { success = true, token });
+        }
+
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] UserCreateDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new { success = false, message = "Dados inválidos" });
+
+            var token = await _authService.RegisterAsync(dto);
+
+            if (token == null)
+                return BadRequest(new { success = false, message = "Usuário já existe" });
+
+            return Ok(new { success = true, token });
         }
     }
 }

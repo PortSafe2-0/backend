@@ -1,6 +1,6 @@
-@portsafe_api_HostAddress = http://localhost:5063
+@PortSafe.API_HostAddress = http://localhost:5063
 
-GET {{portsafe_api_HostAddress}}/weatherforecast/
+GET {{PortSafe.API_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
