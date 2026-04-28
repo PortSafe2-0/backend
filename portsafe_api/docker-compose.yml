@@ -7,7 +7,7 @@ services:
     container_name: portsafe-postgres
     restart: always
     environment:
-      POSTGRES_DB: usersdb
+      POSTGRES_DB: portsafe_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
