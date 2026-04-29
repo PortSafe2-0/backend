@@ -12,6 +12,7 @@ namespace PortSafe.API.Data
 
         public DbSet<User> Users { get; set; }
 
-        // No futuro: + DbSet<Locker> e DbSet<Delivery>
+        public DbSet<Locker> Lockers { get; set; }
+
     }
 }
