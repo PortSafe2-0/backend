@@ -21,12 +21,12 @@ namespace PortSafe.API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(new { success = false, message = "Dados inválidos" });
 
-            var token = await _authService.LoginAsync(loginDto);
+            var result = await _authService.LoginAsync(loginDto);
 
-            if (token == null)
+            if (result == null)
                 return Unauthorized(new { success = false, message = "Credenciais inválidas" });
 
-            return Ok(new { success = true, token });
+            return Ok(new { success = true, token = result.Token, user = result.User });
         }
 
         [HttpPost("register")]
@@ -35,12 +35,12 @@ namespace PortSafe.API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(new { success = false, message = "Dados inválidos" });
 
-            var token = await _authService.RegisterAsync(dto);
+            var result = await _authService.RegisterAsync(dto);
 
-            if (token == null)
+            if (result == null)
                 return BadRequest(new { success = false, message = "Usuário já existe" });
 
-            return Ok(new { success = true, token });
+            return Ok(new { success = true, token = result.Token, user = result.User });
         }
     }
 }

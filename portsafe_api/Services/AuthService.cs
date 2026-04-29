@@ -20,12 +20,27 @@ namespace PortSafe.API.Services
             _configuration = configuration;
         }
 
-        public async Task<string?> LoginAsync(LoginDto loginDto)
+        public async Task<AuthResponseDto?> LoginAsync(LoginDto loginDto)
         {
             var user = await _userRepository.GetByEmailAsync(loginDto.Email);
             if (user == null) return null;
+
             if (!VerifyPassword(loginDto.Password, user.PasswordHash)) return null;
-            return GenerateJwtToken(user);
+
+            var token = GenerateJwtToken(user);
+
+            return new AuthResponseDto
+            {
+                Token = token,
+                User = new UserResponseDto
+                {
+                    Id = user.Id,
+                    Name = user.Name,
+                    Email = user.Email,
+                    Role = user.Role.ToString(),
+                    CreatedAt = user.CreatedAt
+                }
+            };
         }
 
         public string HashPassword(string password)
@@ -66,7 +81,7 @@ namespace PortSafe.API.Services
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        public async Task<string?> RegisterAsync(UserCreateDto dto)
+        public async Task<AuthResponseDto?> RegisterAsync(UserCreateDto dto)
         {
             var existingUser = await _userRepository.GetByEmailAsync(dto.Email);
             if (existingUser != null) return null;
@@ -77,14 +92,26 @@ namespace PortSafe.API.Services
                 Name = dto.Name,
                 Email = dto.Email,
                 PasswordHash = HashPassword(dto.Password),
-                Role = Enum.Parse<Role>(dto.Role, true),
+                Role = Role.User, // 🔐 IMPORTANTE
                 CreatedAt = DateTime.UtcNow
             };
 
             await _userRepository.CreateAsync(user);
 
-            // já retorna token após registro (UX melhor)
-            return GenerateJwtToken(user);
+            var token = GenerateJwtToken(user);
+
+            return new AuthResponseDto
+            {
+                Token = token,
+                User = new UserResponseDto
+                {
+                    Id = user.Id,
+                    Name = user.Name,
+                    Email = user.Email,
+                    Role = user.Role.ToString(),
+                    CreatedAt = user.CreatedAt
+                }
+            };
         }
     }
 

@@ -4,6 +4,7 @@ namespace PortSafe.API.Models
     {
         Admin,
         Porteiro,
-        Morador
+        Morador,
+        User
     }
 }
