@@ -14,5 +14,7 @@ namespace PortSafe.API.Data
 
         public DbSet<Locker> Lockers { get; set; }
 
+        public DbSet<Delivery> Deliveries { get; set; }
+
     }
 }

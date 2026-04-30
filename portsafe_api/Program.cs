@@ -9,7 +9,18 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models; // ✅ IMPORTANTE
 
+
 var builder = WebApplication.CreateBuilder(args);
+// ======================
+// CORS
+// ======================
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", 
+        policy => policy.WithOrigins("http://localhost:3000", "http://localhost:8080", "http://localhost:8081")
+                        .AllowAnyHeader()
+                        .AllowAnyMethod());
+});
 
 // ======================
 // Banco de dados
@@ -24,9 +35,14 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
+
 // Locker
 builder.Services.AddScoped<ILockerRepository, LockerRepository>();
 builder.Services.AddScoped<ILockerService, LockerService>();
+
+// Delivery
+builder.Services.AddScoped<IDeliveryRepository, DeliveryRepository>();
+builder.Services.AddScoped<IDeliveryService, DeliveryService>();
 
 // ======================
 // JWT Authentication
@@ -100,6 +116,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+
 var app = builder.Build();
 
 // ======================
@@ -115,6 +132,8 @@ if (app.Environment.IsDevelopment())
 // Middlewares
 // ======================
 app.UseHttpsRedirection();
+
+app.UseCors("AllowAll");
 
 app.UseAuthentication();
 app.UseAuthorization();
