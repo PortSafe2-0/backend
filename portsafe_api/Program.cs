@@ -133,7 +133,7 @@ if (app.Environment.IsDevelopment())
 // ======================
 app.UseHttpsRedirection();
 
-app.UseCors("AllowAll");
+app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
 app.UseAuthorization();

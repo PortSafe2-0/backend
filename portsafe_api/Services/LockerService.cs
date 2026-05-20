@@ -78,6 +78,43 @@ namespace PortSafe.API.Services
             return true;
         }
 
+        public async Task<bool> UpdateStatusFromEventAsync(string lockerIdentifier, string status)
+        {
+            Locker? locker = null;
+
+            if (Guid.TryParse(lockerIdentifier, out var lockerGuid))
+            {
+                locker = await _lockerRepository.GetByIdAsync(lockerGuid);
+            }
+
+            if (locker == null)
+            {
+                locker = await _lockerRepository.GetByCodeAsync(lockerIdentifier);
+            }
+
+            if (locker == null)
+            {
+                return false;
+            }
+
+            var normalizedStatus = status.Trim().ToLowerInvariant();
+            locker.Status = normalizedStatus switch
+            {
+                "aberto" => LockerStatus.Occupied,
+                "open" => LockerStatus.Occupied,
+                "occupied" => LockerStatus.Occupied,
+                "fechado" => LockerStatus.Available,
+                "closed" => LockerStatus.Available,
+                "available" => LockerStatus.Available,
+                "manutencao" => LockerStatus.Maintenance,
+                "maintenance" => LockerStatus.Maintenance,
+                _ => locker.Status
+            };
+
+            await _lockerRepository.UpdateAsync(locker);
+            return true;
+        }
+
         public async Task<bool> DeleteAsync(Guid id)
         {
             var locker = await _lockerRepository.GetByIdAsync(id);
