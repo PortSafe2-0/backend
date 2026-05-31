@@ -120,6 +120,48 @@ builder.Services.AddSwaggerGen(c =>
 var app = builder.Build();
 
 // ======================
+// Aplicar Migrations Automaticamente com Retry
+// ======================
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    
+    int retries = 0;
+    const int maxRetries = 10;
+    const int delayMs = 3000;
+    
+    while (retries < maxRetries)
+    {
+        try
+        {
+            logger.LogInformation("Tentativa {Attempt} de {MaxRetries}: Aplicando migrations...", retries + 1, maxRetries);
+            
+            // Aguardar um pouco antes de tentar (se não for a primeira tentativa)
+            if (retries > 0)
+            {
+                Thread.Sleep(delayMs);
+            }
+            
+            dbContext.Database.Migrate();
+            logger.LogInformation("✓ Migrations aplicadas com sucesso!");
+            break;
+        }
+        catch (Exception ex)
+        {
+            retries++;
+            logger.LogWarning(ex, "Erro ao conectar ao banco (tentativa {Attempt}): {Message}", retries, ex.Message);
+            
+            if (retries >= maxRetries)
+            {
+                logger.LogError("Falha ao aplicar migrations após {MaxRetries} tentativas", maxRetries);
+                throw;
+            }
+        }
+    }
+}
+
+// ======================
 // Swagger
 // ======================
 if (app.Environment.IsDevelopment())
