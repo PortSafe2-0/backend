@@ -86,13 +86,24 @@ namespace PortSafe.API.Services
             var existingUser = await _userRepository.GetByEmailAsync(dto.Email);
             if (existingUser != null) return null;
 
+            // Mapear a role do DTO para o enum Role
+            var role = dto.Role?.ToLower() switch
+            {
+                "admin" => Role.Admin,
+                "administrador" => Role.Admin,
+                "porteiro" => Role.Porteiro,
+                "morador" => Role.Morador,
+                "residente" => Role.Morador,
+                _ => Role.User
+            };
+
             var user = new User
             {
                 Id = Guid.NewGuid(),
                 Name = dto.Name,
                 Email = dto.Email,
                 PasswordHash = HashPassword(dto.Password),
-                Role = Role.User, // 🔐 IMPORTANTE
+                Role = role,
                 CreatedAt = DateTime.UtcNow
             };
 
