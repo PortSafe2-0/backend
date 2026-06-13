@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using PortSafe.API.Data;
 using PortSafe.API.DTOs;
 using PortSafe.API.Interfaces;
 using PortSafe.API.Models;
@@ -9,12 +11,14 @@ namespace PortSafe.API.Services
         private readonly IDeliveryRepository _deliveryRepository;
         private readonly ILockerRepository _lockerRepository;
         private readonly IUserRepository _userRepository;
+        private readonly AppDbContext _context;
 
-        public DeliveryService(IDeliveryRepository deliveryRepository, ILockerRepository lockerRepository, IUserRepository userRepository)
+        public DeliveryService(IDeliveryRepository deliveryRepository, ILockerRepository lockerRepository, IUserRepository userRepository, AppDbContext context)
         {
             _deliveryRepository = deliveryRepository;
             _lockerRepository = lockerRepository;
             _userRepository = userRepository;
+            _context = context;
         }
 
         public async Task<IEnumerable<DeliveryResponseDto>> GetAllAsync()
@@ -31,14 +35,13 @@ namespace PortSafe.API.Services
 
         public async Task<DeliveryResponseDto> CreateAsync(DeliveryCreateDto dto)
         {
-            // Validações
             var locker = await _lockerRepository.GetByIdAsync(dto.LockerId);
             if (locker == null || locker.Status != LockerStatus.Available || !locker.IsActive)
-                throw new InvalidOperationException("Locker não disponível para entrega.");
+                throw new InvalidOperationException($"Armário não disponível (status atual: {locker?.Status.ToString() ?? "não encontrado"}).");
 
             var user = await _userRepository.GetByIdAsync(dto.UserId);
             if (user == null)
-                throw new InvalidOperationException("Usuário não encontrado.");
+                throw new InvalidOperationException($"Usuário não encontrado (id: {dto.UserId}).");
 
             var delivery = new Delivery
             {
@@ -51,10 +54,21 @@ namespace PortSafe.API.Services
                 CreatedAt = DateTime.UtcNow
             };
 
-            // Locker para ocupado
-            locker.Status = LockerStatus.Occupied;
-            await _lockerRepository.UpdateAsync(locker);
-            await _deliveryRepository.CreateAsync(delivery);
+            await using var tx = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                locker.Status = LockerStatus.Occupied;
+                _context.Lockers.Update(locker);
+                _context.Deliveries.Add(delivery);
+                await _context.SaveChangesAsync();
+                await tx.CommitAsync();
+            }
+            catch
+            {
+                await tx.RollbackAsync();
+                throw;
+            }
+
             return MapToResponseDto(delivery);
         }
 
@@ -80,17 +94,63 @@ namespace PortSafe.API.Services
             return true;
         }
 
+        public async Task<AnonymousDeliveryResponseDto> CreateAnonymousAsync(AnonymousDeliveryCreateDto dto)
+        {
+            var user = await _userRepository.GetByNameAsync(dto.RecipientName);
+            if (user == null)
+                throw new InvalidOperationException($"Morador não encontrado com o nome \"{dto.RecipientName}\". Verifique e tente novamente.");
+
+            var locker = await _lockerRepository.GetFirstAvailableAsync();
+            if (locker == null)
+                throw new InvalidOperationException("Nenhum armário disponível no momento. Tente mais tarde.");
+
+            var trackingCode = dto.TrackingCode ?? $"PS{Guid.NewGuid().ToString("N")[..8].ToUpper()}";
+
+            var delivery = new Delivery
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                LockerId = locker.Id,
+                RecipientName = dto.RecipientName,
+                TrackingCode = trackingCode,
+                Status = DeliveryStatus.Pending,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await using var tx = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                locker.Status = LockerStatus.Occupied;
+                _context.Lockers.Update(locker);
+                _context.Deliveries.Add(delivery);
+                await _context.SaveChangesAsync();
+                await tx.CommitAsync();
+            }
+            catch
+            {
+                await tx.RollbackAsync();
+                throw;
+            }
+
+            return new AnonymousDeliveryResponseDto
+            {
+                DeliveryId = delivery.Id,
+                TrackingCode = delivery.TrackingCode,
+                LockerCode = locker.Code,
+                LockerLocation = locker.Location
+            };
+        }
+
         public async Task<bool> WithdrawAsync(Guid id)
         {
-            var delivery = await _deliveryRepository.GetByIdAsync(id);
-            if (delivery == null || delivery.Status != DeliveryStatus.Delivered) return false;
-            var locker = await _lockerRepository.GetByIdAsync(delivery.LockerId);
+            var delivery = await _context.Deliveries.FindAsync(id);
+            if (delivery == null || delivery.Status == DeliveryStatus.Withdrawn || delivery.Status == DeliveryStatus.Cancelled) return false;
+            var locker = await _context.Lockers.FindAsync(delivery.LockerId);
             if (locker == null) return false;
             delivery.Status = DeliveryStatus.Withdrawn;
             delivery.WithdrawnAt = DateTime.UtcNow;
             locker.Status = LockerStatus.Available;
-            await _deliveryRepository.UpdateAsync(delivery);
-            await _lockerRepository.UpdateAsync(locker);
+            await _context.SaveChangesAsync();
             return true;
         }
 

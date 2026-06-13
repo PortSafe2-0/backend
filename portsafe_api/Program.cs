@@ -16,10 +16,24 @@ var builder = WebApplication.CreateBuilder(args);
 // ======================
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend", 
-        policy => policy.WithOrigins("http://localhost:3000", "http://localhost:8080", "http://localhost:8081")
-                        .AllowAnyHeader()
-                        .AllowAnyMethod());
+    if (builder.Environment.IsDevelopment())
+    {
+        // Em dev: permite qualquer origem (Expo Web, browser, emuladores)
+        options.AddPolicy("AllowFrontend",
+            policy => policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+    }
+    else
+    {
+        options.AddPolicy("AllowFrontend",
+            policy => policy
+                .WithOrigins(
+                    "http://localhost:3000",
+                    "http://localhost:8080",
+                    "http://localhost:8081"
+                )
+                .AllowAnyHeader()
+                .AllowAnyMethod());
+    }
 });
 
 // ======================
@@ -43,6 +57,9 @@ builder.Services.AddScoped<ILockerService, LockerService>();
 // Delivery
 builder.Services.AddScoped<IDeliveryRepository, DeliveryRepository>();
 builder.Services.AddScoped<IDeliveryService, DeliveryService>();
+
+// Email
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 // ======================
 // JWT Authentication
@@ -76,7 +93,19 @@ builder.Services.AddAuthorization();
 // ======================
 // Controllers
 // ======================
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.InvalidModelStateResponseFactory = ctx =>
+        {
+            var errors = ctx.ModelState
+                .Where(x => x.Value?.Errors.Count > 0)
+                .Select(x => $"{x.Key}: {string.Join(", ", x.Value!.Errors.Select(e => e.ErrorMessage))}")
+                .ToList();
+            var message = errors.Count > 0 ? string.Join(" | ", errors) : "Dados inválidos";
+            return new Microsoft.AspNetCore.Mvc.BadRequestObjectResult(new { success = false, message });
+        };
+    });
 
 // ======================
 // Swagger + JWT

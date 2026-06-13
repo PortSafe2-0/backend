@@ -22,7 +22,14 @@ namespace PortSafe.API.Services
             Name = user.Name,
             Email = user.Email,
             Role = user.Role.ToString(),
-            CreatedAt = user.CreatedAt
+            CreatedAt = user.CreatedAt,
+            Phone = user.Phone,
+            Document = user.Document,
+            Block = user.Block,
+            UnitNumber = user.UnitNumber,
+            Street = user.Street,
+            HouseNumber = user.HouseNumber,
+            ZipCode = user.ZipCode
         };
 
         // Retorna todos os usuários
@@ -54,9 +61,16 @@ namespace PortSafe.API.Services
                 Id = Guid.NewGuid(),
                 Name = dto.Name,
                 Email = dto.Email,
-                PasswordHash = dto.Password, // Troque para hash real depois
+                PasswordHash = dto.Password,
                 Role = Enum.Parse<Role>(dto.Role, true),
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                Phone = dto.Phone,
+                Document = dto.Document,
+                Block = dto.Block,
+                UnitNumber = dto.UnitNumber,
+                Street = dto.Street,
+                HouseNumber = dto.HouseNumber,
+                ZipCode = dto.ZipCode
             };
             await _userRepository.CreateAsync(user);
             return ToDto(user);
@@ -70,6 +84,13 @@ namespace PortSafe.API.Services
             user.Name = dto.Name;
             user.Email = dto.Email;
             user.Role = Enum.Parse<Role>(dto.Role, true);
+            if (dto.Phone != null) user.Phone = dto.Phone;
+            if (dto.Document != null) user.Document = dto.Document;
+            if (dto.Block != null) user.Block = dto.Block;
+            if (dto.UnitNumber != null) user.UnitNumber = dto.UnitNumber;
+            if (dto.Street != null) user.Street = dto.Street;
+            if (dto.HouseNumber != null) user.HouseNumber = dto.HouseNumber;
+            if (dto.ZipCode != null) user.ZipCode = dto.ZipCode;
             await _userRepository.UpdateAsync(user);
             return ToDto(user);
         }

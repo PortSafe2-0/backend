@@ -10,5 +10,6 @@ namespace PortSafe.API.Interfaces
         Task<bool> UpdateAsync(Guid id, DeliveryUpdateDto dto);
         Task<bool> DeleteAsync(Guid id);
         Task<bool> WithdrawAsync(Guid id);
+        Task<AnonymousDeliveryResponseDto> CreateAnonymousAsync(AnonymousDeliveryCreateDto dto);
     }
 }

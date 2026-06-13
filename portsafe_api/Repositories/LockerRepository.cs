@@ -46,5 +46,11 @@ namespace PortSafe.API.Repositories
             _context.Lockers.Remove(locker);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<Locker?> GetFirstAvailableAsync()
+        {
+            return await _context.Lockers
+                .FirstOrDefaultAsync(l => l.Status == LockerStatus.Available && l.IsActive);
+        }
     }
 }

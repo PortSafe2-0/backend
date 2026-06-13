@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PortSafe.API.Data;
@@ -11,9 +12,11 @@ using PortSafe.API.Data;
 namespace PortSafe.API.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260612230936_AddUserExtraFields")]
+    partial class AddUserExtraFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -89,53 +92,6 @@ namespace PortSafe.API.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Lockers");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("a1b2c3d4-0001-0001-0001-000000000001"),
-                            Code = "A01",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            Location = "Portaria - Bloco A",
-                            Status = 0
-                        },
-                        new
-                        {
-                            Id = new Guid("a1b2c3d4-0001-0001-0001-000000000002"),
-                            Code = "A02",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            Location = "Portaria - Bloco A",
-                            Status = 0
-                        },
-                        new
-                        {
-                            Id = new Guid("a1b2c3d4-0001-0001-0001-000000000003"),
-                            Code = "A03",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            Location = "Portaria - Bloco A",
-                            Status = 0
-                        },
-                        new
-                        {
-                            Id = new Guid("a1b2c3d4-0001-0001-0001-000000000004"),
-                            Code = "B01",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            Location = "Portaria - Bloco B",
-                            Status = 0
-                        },
-                        new
-                        {
-                            Id = new Guid("a1b2c3d4-0001-0001-0001-000000000005"),
-                            Code = "B02",
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
-                            Location = "Portaria - Bloco B",
-                            Status = 0
-                        });
                 });
 
             modelBuilder.Entity("PortSafe.API.Models.User", b =>

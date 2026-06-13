@@ -10,5 +10,6 @@ namespace PortSafe.API.Interfaces
         Task<Locker> CreateAsync(Locker locker);
         Task UpdateAsync(Locker locker);
         Task DeleteAsync(Locker locker);
+        Task<Locker?> GetFirstAvailableAsync();
     }
 }

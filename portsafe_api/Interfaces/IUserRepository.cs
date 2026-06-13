@@ -11,5 +11,6 @@ namespace PortSafe.API.Interfaces
         Task CreateAsync(User user); // Adiciona um novo usuário
         Task UpdateAsync(User user); // Atualiza um usuário existente
         Task DeleteAsync(User user); // Remove um usuário
+        Task<User?> GetByNameAsync(string name);
     }
 }

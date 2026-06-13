@@ -54,5 +54,12 @@ namespace PortSafe.API.Repositories
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<User?> GetByNameAsync(string name)
+        {
+            return await _context.Users
+                .Where(u => u.Role == Role.Morador)
+                .FirstOrDefaultAsync(u => u.Name.ToLower().Contains(name.ToLower()));
+        }
     }
 }
