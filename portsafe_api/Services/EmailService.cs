@@ -18,7 +18,14 @@ namespace PortSafe.API.Services
         public async Task SendPasswordResetCodeAsync(string toEmail, string code)
         {
             var smtp = _config.GetSection("Smtp");
-            var host = smtp["Host"]!;
+            var host = smtp["Host"];
+
+            if (string.IsNullOrEmpty(host))
+            {
+                _logger.LogWarning("SMTP não configurado. Código de redefinição para {Email}: {Code}", toEmail, code);
+                return;
+            }
+
             var port = int.Parse(smtp["Port"]!);
             var enableSsl = bool.Parse(smtp["EnableSsl"] ?? "true");
             var username = smtp["Username"]!;

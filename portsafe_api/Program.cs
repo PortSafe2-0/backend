@@ -16,24 +16,17 @@ var builder = WebApplication.CreateBuilder(args);
 // ======================
 builder.Services.AddCors(options =>
 {
-    if (builder.Environment.IsDevelopment())
+    var allowedOrigins = builder.Configuration["CORS_ALLOWED_ORIGINS"] ?? "*";
+
+    options.AddPolicy("AllowFrontend", policy =>
     {
-        // Em dev: permite qualquer origem (Expo Web, browser, emuladores)
-        options.AddPolicy("AllowFrontend",
-            policy => policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
-    }
-    else
-    {
-        options.AddPolicy("AllowFrontend",
-            policy => policy
-                .WithOrigins(
-                    "http://localhost:3000",
-                    "http://localhost:8080",
-                    "http://localhost:8081"
-                )
-                .AllowAnyHeader()
-                .AllowAnyMethod());
-    }
+        if (allowedOrigins == "*")
+            policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+        else
+            policy.WithOrigins(allowedOrigins.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+    });
 });
 
 // ======================
@@ -202,7 +195,8 @@ if (app.Environment.IsDevelopment())
 // ======================
 // Middlewares
 // ======================
-app.UseHttpsRedirection();
+if (app.Environment.IsDevelopment())
+    app.UseHttpsRedirection();
 
 app.UseCors("AllowFrontend");
 
