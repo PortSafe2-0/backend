@@ -4,10 +4,17 @@ namespace PortSafe.API.DTOs
 {
     public class UserResponseDto
     {
-        public Guid Id { get; set; } // Guid = gerar indentificador único p/ cada usuário
+        public Guid Id { get; set; }
         public string Name { get; set; }
         public string Email { get; set; }
         public string Role { get; set; }
-        public DateTime CreatedAt { get; set; } // DateTime = data e hora de criação do usuário
+        public DateTime CreatedAt { get; set; }
+        public string? Phone { get; set; }
+        public string? Document { get; set; }
+        public string? Block { get; set; }
+        public string? UnitNumber { get; set; }
+        public string? Street { get; set; }
+        public string? HouseNumber { get; set; }
+        public string? ZipCode { get; set; }
     }
 }

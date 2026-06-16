@@ -42,5 +42,29 @@ namespace PortSafe.API.Controllers
 
             return Ok(new { success = true, token = result.Token, user = result.User });
         }
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new { success = false, message = "E-mail inválido" });
+
+            // Sempre retorna sucesso para não revelar se o e-mail existe
+            await _authService.ForgotPasswordAsync(dto.Email);
+            return Ok(new { success = true, message = "Se o e-mail estiver cadastrado, você receberá o código em instantes." });
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new { success = false, message = "Dados inválidos" });
+
+            var ok = await _authService.ResetPasswordAsync(dto.Email, dto.Code, dto.NewPassword);
+            if (!ok)
+                return BadRequest(new { success = false, message = "Código inválido ou expirado" });
+
+            return Ok(new { success = true, message = "Senha redefinida com sucesso" });
+        }
     }
 }
